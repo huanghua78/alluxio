@@ -20,6 +20,8 @@ import alluxio.proto.dataserver.Protocol;
 import alluxio.wire.WorkerNetAddress;
 
 import com.codahale.metrics.Counter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -28,6 +30,7 @@ import java.util.function.Supplier;
  * Positioned Netty data reader.
  */
 public class NettyDataReader implements PositionReader {
+  private static final Logger LOG = LoggerFactory.getLogger(NettyDataReader.class);
   private final FileSystemContext mContext;
   private final WorkerNetAddress mAddress;
   private final Supplier<Protocol.ReadRequest.Builder> mRequestBuilder;
@@ -53,6 +56,11 @@ public class NettyDataReader implements PositionReader {
         .setLength(length)
         .setOffset(position)
         .clearCancel();
+    LOG.error("Client-side Netty reading pos = {} len = {}", position, length);
+//    if (length > 0) {
+//      return length;
+//    }
+
     NettyDataReaderStateMachine clientStateMachine =
         new NettyDataReaderStateMachine(mContext, mAddress, builder, buffer);
     clientStateMachine.run();

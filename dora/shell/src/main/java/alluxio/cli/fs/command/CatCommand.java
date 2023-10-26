@@ -54,13 +54,16 @@ public final class CatCommand extends AbstractFileSystemCommand {
     if (status.isFolder()) {
       throw new FileDoesNotExistException(ExceptionMessage.PATH_MUST_BE_FILE.getMessage(path));
     }
-    byte[] buf = new byte[Constants.MB];
+    byte[] buf = new byte[Constants.KB * 128];
     try (FileInStream is = mFileSystem.openFile(path)) {
+      long start = System.currentTimeMillis();
       int read = is.read(buf);
       while (read != -1) {
-        System.out.write(buf, 0, read);
+        //System.out.write(buf, 0, read);
         read = is.read(buf);
       }
+      long end = System.currentTimeMillis();
+      System.out.println("time = " + (end - start));
     }
   }
 

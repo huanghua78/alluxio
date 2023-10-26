@@ -312,6 +312,8 @@ public class AlluxioJniFuseFileSystem extends AbstractFuseFileSystem {
       return -ErrorCodes.EBADFD();
     }
     try {
+      LOG.error("FAKE READ {} : pos= {} len = {}", path, offset, size);
+      //return (int)size;
       return entry.getFileStream().read(buf, size, offset);
     } catch (NotFoundRuntimeException e) {
       LOG.error("Failed to read {}: File does not exist or is writing by other clients", path);

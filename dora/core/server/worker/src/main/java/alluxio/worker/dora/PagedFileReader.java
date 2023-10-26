@@ -33,11 +33,14 @@ import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -46,11 +49,14 @@ import java.util.Optional;
  * Paged file reader.
  */
 public class PagedFileReader extends BlockReader implements PositionReader {
+  private static final Logger LOG = LoggerFactory.getLogger(PagedFileReader.class);
   private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocate(0);
   private final long mFileSize;
   private final LocalCachePositionReader mPositionReader;
   private long mPos;
   private volatile boolean mClosed = false;
+
+  private byte mLocalBuffer[];
 
   /**
    * Creates a new {@link PagedFileReader}.
@@ -86,6 +92,8 @@ public class PagedFileReader extends BlockReader implements PositionReader {
     mPositionReader = Preconditions.checkNotNull(localCachePositionReader);
     mFileSize = fileSize;
     mPos = startPosition;
+    mLocalBuffer = new byte[1024 * 1024 * 16];
+    Arrays.fill(mLocalBuffer, (byte)'A');
   }
 
   /**
@@ -114,6 +122,7 @@ public class PagedFileReader extends BlockReader implements PositionReader {
       } else {
         // update mPos
         // TODO(JiamingMai): need to lock page files since the openFile op is called in netty latter
+        LOG.error("Worker-side channel reading: pos = {} len = {}", mPos, lengthPerOp);
         dataBuffer = dataFileChannel.get();
         if (dataBuffer.getLength() > 0) {
           mPos += dataBuffer.getLength();
@@ -195,6 +204,9 @@ public class PagedFileReader extends BlockReader implements PositionReader {
     int bytesToTransfer =
         (int) Math.min(buf.writableBytes(), mFileSize - mPos);
     ReadTargetBuffer targetBuffer = new NettyBufTargetBuffer(buf);
+    LOG.error("Worker-side data-copy reading: pos = {} len = {}", mPos, bytesToTransfer);
+//    targetBuffer.writeBytes(mLocalBuffer, 0, bytesToTransfer); // fill the buffer with all 'A'
+//    int bytesRead = bytesToTransfer;
     int bytesRead = mPositionReader.read(mPos, targetBuffer, bytesToTransfer);
     if (bytesRead > 0) {
       mPos += bytesRead;

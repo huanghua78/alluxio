@@ -201,6 +201,9 @@ public class PositionReadFileInStream extends FileInStream {
     if (!byteBuffer.hasRemaining()) {
       return totalBytesRead;
     }
+    if (mPos >= mLength) {
+      return -1;
+    }
     int bytesPrefetched = mCache.prefetch(mPositionReader, mPos, byteBuffer.remaining());
     if (bytesPrefetched < 0) {
       if (totalBytesRead == 0) {

@@ -46,6 +46,8 @@ import javax.annotation.concurrent.NotThreadSafe;
 public class LocalPageStore implements PageStore {
   private static final String ERROR_NO_SPACE_LEFT = "No space left on device";
   public static final String TEMP_DIR = "TEMP";
+  public static final String FAKE_PATH = "/home/huanghua/work/enterprise/300";
+  public static final File   FAKE_FILE = Paths.get(FAKE_PATH).toFile();
   private final Path mRoot;
   private final long mPageSize;
   private final long mCapacity;
@@ -210,8 +212,10 @@ public class LocalPageStore implements PageStore {
     if (!pageFile.exists()) {
       throw new PageNotFoundException(pagePath.toString());
     }
+    //File pageFile = FAKE_FILE;
 
     long fileLength = pageFile.length();
+    //long fileLength = 16777216;
     if (pageOffset + bytesToRead > fileLength) {
       bytesToRead = (int) (fileLength - (long) pageOffset);
     }
